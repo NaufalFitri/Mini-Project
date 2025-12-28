@@ -1,7 +1,5 @@
 package Rooms;
 
-import Entities.Doctor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -5,6 +5,11 @@ import Entities.Patient;
 
 public class Room {
 
+    public enum Type {
+        Diagnose,
+        Treatment
+    }
+
     private String RoomID;
     private Doctor assignedDoctor;
     private Patient currentPatient;

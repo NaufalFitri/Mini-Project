@@ -1,0 +1,24 @@
+package Exceptions;
+
+public class InvalidPhoneEx extends Exception {
+
+    public enum Type {
+        first("Phone number length exceed limit of 11!"),
+        second("Phone number is not a number!");
+
+        private final String description;
+
+        private Type(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    public InvalidPhoneEx(Type type) {
+        super(type.getDescription());
+    }
+
+}
