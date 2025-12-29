@@ -25,12 +25,6 @@ public class Main {
             return;
         }
 
-        try {
-            db.insertDoctor(con.createStatement(), "Naufal", Doctor.field.Cardiology, "0187786707");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
         GUI gui = new GUI(db);
         gui.show();
     }

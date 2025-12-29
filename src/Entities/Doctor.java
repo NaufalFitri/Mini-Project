@@ -20,7 +20,7 @@ public class Doctor {
     private String name;
     private boolean isTreating;
     private field specialisedField = null;
-
+    private String phone;
 
     public Doctor(int id,String name, String specialization, String phone) throws InvalidSpecializationEx, InvalidPhoneEx {
 
@@ -47,6 +47,7 @@ public class Doctor {
 
         this.id = id;
         this.name = name;
+        this.phone = phone;
     }
 
     public void setId(int id) {
@@ -59,6 +60,10 @@ public class Doctor {
 
     public String getName() {
         return name;
+    }
+
+    public String getPhone() {
+        return phone;
     }
 
     public boolean isTreating()

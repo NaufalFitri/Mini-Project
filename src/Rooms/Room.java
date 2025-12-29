@@ -10,10 +10,16 @@ public class Room {
         Treatment
     }
 
-    private String RoomID;
+    private int RoomID;
+    private String roomNumber;
     private Doctor assignedDoctor;
     private Patient currentPatient;
     private boolean isOccupied;
+
+    public Room(int id, String number) {
+        this.RoomID = id;
+        this.roomNumber = number;
+    }
 
     public void setAssignedDoctor(Doctor doctor) {
         assignedDoctor = doctor;
@@ -23,11 +29,11 @@ public class Room {
         return assignedDoctor;
     }
 
-    public void setRoomID(String roomID) {
-        RoomID = roomID;
-    }
+    public void setRoomNumber(String number) { roomNumber = number; }
 
-    public String getRoomID() {
+    public String getRoomNumber() { return roomNumber; }
+
+    public int getRoomID() {
         return RoomID;
     }
 
@@ -46,4 +52,5 @@ public class Room {
     public boolean isOccupied() {
         return isOccupied;
     }
+
 }

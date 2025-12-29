@@ -9,6 +9,7 @@ import Rooms.Room;
 import Rooms.TreatmentRoom;
 
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +22,11 @@ public class Database {
     private final String password;
     private Connection conn = null;
 
-    private List<Doctor> doctorList = new ArrayList<>();
-    private List<Patient> patientList = new ArrayList<>();
-    private List<DiagnoseRoom> diagnoseRooms = new ArrayList<>();
-    private List<TreatmentRoom> treatmentRooms = new ArrayList<>();
-    private List<Owner> ownersList = new ArrayList<>();
+    private final List<Doctor> doctorList = new ArrayList<>();
+    private final List<Patient> patientList = new ArrayList<>();
+    private final List<DiagnoseRoom> diagnoseRooms = new ArrayList<>();
+    private final List<TreatmentRoom> treatmentRooms = new ArrayList<>();
+    private final List<Owner> ownersList = new ArrayList<>();
 
     private void loadAllEntities(Statement stmt) throws SQLException {
         ResultSet res;
@@ -58,10 +59,10 @@ public class Database {
 
                         break;
                     case 2:
-                        diagnoseRooms.add(new DiagnoseRoom());
+                        diagnoseRooms.add(new DiagnoseRoom(res.getInt(1), res.getString(2)));
                         break;
                     case 3:
-                        treatmentRooms.add(new TreatmentRoom());
+                        treatmentRooms.add(new TreatmentRoom(res.getInt(1), res.getString(2)));
                         break;
                     case 4:
 
@@ -223,11 +224,11 @@ public class Database {
             if (res.next()) {
                 switch (res.getString(2)) {
                     case "Diagnose":
-                        DiagnoseRoom DRoom = new DiagnoseRoom();
+                        DiagnoseRoom DRoom = new DiagnoseRoom(res.getInt(1), number);
                         diagnoseRooms.add(DRoom);
                         break;
                     case "Treatment":
-                        TreatmentRoom TRoom = new TreatmentRoom();
+                        TreatmentRoom TRoom = new TreatmentRoom(res.getInt(1), number);
                         treatmentRooms.add(TRoom);
                         break;
                 }
@@ -249,7 +250,128 @@ public class Database {
             i++;
         }
 
-        return "";
+        String statement = "UPDATE `veterinarians` SET `name` = '" + ud.getName() + "', `specialization` = '" + ud.getField().name() + "', `phone` = '" + ud.getPhone() + "' WHERE `veterinarians`.`vet_id` = " + ud.getId();
+        int rows = stmt.executeUpdate(statement);
+
+        return rows + " row(s) updated.";
+    }
+
+    public String updatePatient(Statement stmt, Patient up) throws SQLException {
+        int i = 0;
+        for (Patient p : patientList) {
+            if (p.getId() == up.getId()) {
+                patientList.set(i, up);
+                break;
+            }
+            i++;
+        }
+
+        String statement = "UPDATE `animals` SET `name` = '" + up.getName() + "', `species` = '" + up.getSpecies() + "', `breed` = '" + up.getBreed() + "', `age` = " + up.getAge() + ", `gender` = '" + up.getGender().name() + "', `owner_id` = " + up.getOwner().getId() + " WHERE `animals`.`animal_id` = " + up.getId();
+        int rows = stmt.executeUpdate(statement);
+
+        return rows + " row(s) updated.";
+    }
+
+    public String updateOwner(Statement stmt, Owner uo) throws SQLException {
+        int i = 0;
+        for (Owner o : ownersList) {
+            if (o.getId() == uo.getId()) {
+                ownersList.set(i, uo);
+                break;
+            }
+            i++;
+        }
+
+        String statement = "UPDATE `owners` SET `owner_name` = '" + uo.getName() + "', `phone` = '" + uo.getPhone() + "', `address` = '" + uo.getAddress() + "' WHERE `owners`.`owner_id` = " + uo.getId();
+        int rows = stmt.executeUpdate(statement);
+
+        return rows + " row(s) updated.";
+    }
+
+    public String updateRoom(Statement stmt, Room r) throws SQLException {
+        String roomtype = "";
+
+        if (r instanceof DiagnoseRoom udr) {
+            int i = 0;
+            for (DiagnoseRoom dr : diagnoseRooms) {
+                if (dr.getRoomID() == udr.getRoomID()) {
+                    diagnoseRooms.set(i, udr);
+                    break;
+                }
+                i++;
+            }
+
+            roomtype = "Diagnose";
+
+        } else if (r instanceof TreatmentRoom utr) {
+            int i = 0;
+            for (TreatmentRoom tr : treatmentRooms) {
+                if (tr.getRoomID() == utr.getRoomID()) {
+                    treatmentRooms.set(i, utr);
+                    break;
+                }
+                i++;
+            }
+
+            roomtype = "Treatment";
+        }
+
+        String statement = "UPDATE `rooms` r INNER JOIN room_types rt ON rt.type_name = '" + roomtype + "' SET r.`room_number` = '" + r.getRoomNumber() + "', r.`roomType_id` = rt.`roomType_id` WHERE `rooms`.`room_id` = " + r.getRoomID();
+        int rows = stmt.executeUpdate(statement);
+
+        return rows + " row(s) updated.";
+    }
+
+    public String deleteDoctor(Statement stmt, Doctor d) throws SQLException {
+
+        doctorList.remove(d);
+        String sqlStatement = "DELETE FROM veterinarians WHERE `veterinarians`.`vet_id` = " + d.getId();
+        int rows = stmt.executeUpdate(sqlStatement);
+
+        return rows + " row(s) updated.";
+    }
+
+    public String deletePatient(Statement stmt, Patient p) throws SQLException {
+
+        patientList.remove(p);
+        String sqlStatement = "DELETE FROM animals WHERE `animals`.`animal_id` = " + p.getId();
+        int rows = stmt.executeUpdate(sqlStatement);
+
+        return rows + " row(s) updated.";
+    }
+
+    public String deleteOwner(Statement stmt, Owner o) throws SQLException {
+
+        ownersList.remove(o);
+        String sqlStatement = "DELETE FROM owners WHERE `owners`.`owner_id` = " + o.getId();
+        int rows = stmt.executeUpdate(sqlStatement);
+
+        return rows + " row(s) updated.";
+
+    }
+
+    public String deleteRoom(Statement stmt, Room r) throws SQLException {
+
+        if (r instanceof DiagnoseRoom dr) {
+            diagnoseRooms.remove(dr);
+        } else if (r instanceof TreatmentRoom tr) {
+            treatmentRooms.remove(tr);
+        }
+
+        String sqlStatement = "DELETE FROM rooms WHERE `rooms`.`room_id` = " + r.getRoomID();
+        int rows = stmt.executeUpdate(sqlStatement);
+
+        return rows + " row(s) updated.";
+
+    }
+
+    public String addTreatment(Statement stmt, TreatmentRoom tr) throws SQLException {
+
+        String statement = "INSERT INTO `treatments` (`treatment_id`, `vet_id`, `animal_id`, `room_id`, `date`, `diagnosis`, `notes`) VALUES (NULL, '" + tr.getAssignedDoctor().getId() + "', '" + tr.getCurrentPatient().getId() + "', '" + tr.getRoomNumber() + "', '" + tr.getTreatmentStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "', '" + tr.getCurrentPatient().getDiagnosis() + "', '" + String.join("\n", tr.generateReports()) + "')";
+        int rows = stmt.executeUpdate(statement);
+
+        return rows + " row(s) updated.";
+
     }
 
 }

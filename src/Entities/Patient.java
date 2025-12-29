@@ -6,14 +6,17 @@ import java.util.Arrays;
 
 public class Patient {
 
-    private enum Gender {
+    public enum Gender {
         Male,
         Female,
     }
 
-    private String name;
+    private final String name;
     private int id;
     private String diagnose;
+    private final String species;
+    private final String breed;
+    private final int age;
     private Gender gender = null;
     private Owner o = null;
 
@@ -31,14 +34,21 @@ public class Patient {
 
         this.name = name;
         this.id = id;
+        this.species = species;
+        this.breed = breed;
+        this.age = age;
     }
 
     public void setOwner(Owner o) {
         this.o = o;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setDiagnose(String diagnose) {
+        this.diagnose = diagnose;
+    }
+
+    public String getDiagnosis() {
+        return diagnose;
     }
 
     public Owner getOwner() {
@@ -47,6 +57,26 @@ public class Patient {
 
     public String getName() {
         return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getSpecies() {
+        return this.species;
+    }
+
+    public String getBreed() {
+        return this.breed;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public Gender getGender() {
+        return gender;
     }
     
 //    public isBeingTreated()

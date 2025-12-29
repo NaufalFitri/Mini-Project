@@ -8,7 +8,7 @@ public class InvalidPhoneEx extends Exception {
 
         private final String description;
 
-        private Type(String description) {
+        Type(String description) {
             this.description = description;
         }
 
