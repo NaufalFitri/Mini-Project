@@ -35,7 +35,7 @@ public class Doctor {
             throw new InvalidSpecializationEx("Specialization " + specialization + " is invalid!");
         }
 
-        if (phone.length() >= 11) {
+        if (phone.length() > 11) {
             throw new InvalidPhoneEx(InvalidPhoneEx.Type.first);
         }
 

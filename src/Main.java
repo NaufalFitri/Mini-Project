@@ -1,12 +1,14 @@
 import Entities.Doctor;
 import Entities.Patient;
+import GUIs.GUI;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-public class Main {
+import Data.Database;
 
+public class Main {
     public static void main(String[] args) {
         Database db = new Database();
         Connection con = null;

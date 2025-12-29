@@ -1,3 +1,4 @@
+package Data;
 import Entities.Doctor;
 import Entities.Owner;
 import Entities.Patient;
@@ -53,6 +54,7 @@ public class Database {
                         try {
                             Owner o = new Owner(res.getInt(1), res.getString(2), res.getString(3), res.getString(4));
                             ownersList.add(o);
+                        
                         } catch (InvalidPhoneEx e) {
                             e.printStackTrace();
                         }
@@ -77,14 +79,17 @@ public class Database {
                     case 5:
 
                         try {
-                            Patient p = new Patient(res.getInt(1), res.getString(2), res.getString(3), res.getString(4), res.getInt(5), res.getString(6));
-
-                            for (Owner o : ownersList) {
-                                if (o.getId() == res.getInt(7)) {
-                                    p.setOwner(o);
+                            Owner o = null;
+                            for (Owner t : ownersList) {
+                                if (t.getId() == res.getInt(7)) {
+                                    o = t;
                                 }
                             }
-
+                            
+                            if (o == null) {
+                                continue;
+                            }
+                            Patient p = new Patient(res.getInt(1), res.getString(2), res.getString(3), res.getString(4), res.getInt(5), res.getString(6), o);
                             patientList.add(p);
                         } catch (InvalidGenderEx e) {
                             e.printStackTrace();
@@ -134,6 +139,10 @@ public class Database {
         return treatmentRooms;
     }
 
+    public List<Owner> getOwnersList() {
+        return ownersList;
+    }
+
     public String insertDoctor(Statement stmt, String name, Doctor.field field, String phone) throws SQLException {
 
         ResultSet res;
@@ -164,14 +173,14 @@ public class Database {
         ResultSet res;
 
         String statement = "INSERT INTO `animals` (`animal_id`, `name`, `species`, `breed`, `age`, `gender`, `owner_id`) VALUES (NULL, '" + name + "','" + species + "','" + breed + "', " + age + ",'" + gender + "', " + o.getId() + ")";
-        String getID = "SELECT animal_id FROM `veterinarians` WHERE `name` = '" + name + "', `owner_id` = " + o.getId();
+        String getID = "SELECT animal_id FROM `animals` WHERE `name` = '" + name + "' AND `owner_id` = '" + o.getId() + "'";
 
         int rows = stmt.executeUpdate(statement);
         if (rows > 0) {
             res = stmt.executeQuery(getID);
             if (res.next()) {
                 try {
-                    Patient p = new Patient(res.getInt(1), name, species, breed, age, gender);
+                    Patient p = new Patient(res.getInt(1), name, species, breed, age, gender,o);
                     patientList.add(p);
                 } catch (InvalidGenderEx e) {
                     e.printStackTrace();
@@ -190,7 +199,7 @@ public class Database {
         ResultSet res;
 
         String statement = "INSERT INTO `owners` (`owner_id`, `owner_name`, `phone`, `address`) VALUES (NULL, '" + name + "','" + phone + "','" + address + "')";
-        String getID = "SELECT owner_id FROM `owners` WHERE `owner_name` = '" + name + "', `phone` = " + phone;
+        String getID = "SELECT owner_id FROM `owners` WHERE `owner_name` = '" + name + "', `phone` = '" + phone + "'";
 
         int rows = stmt.executeUpdate(statement);
         if (rows > 0) {

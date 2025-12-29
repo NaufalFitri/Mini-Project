@@ -2,8 +2,6 @@ package Entities;
 
 import Exceptions.InvalidGenderEx;
 
-import java.util.Arrays;
-
 public class Patient {
 
     public enum Gender {
@@ -20,7 +18,7 @@ public class Patient {
     private Gender gender = null;
     private Owner o = null;
 
-    public Patient(int id, String name, String species, String breed, int age, String gender) throws InvalidGenderEx
+    public Patient(int id, String name, String species, String breed, int age, String gender, Owner o) throws InvalidGenderEx
     {
         for (Gender gen : Gender.values()) {
             if (gen.name().equals(gender)) {
@@ -37,6 +35,7 @@ public class Patient {
         this.species = species;
         this.breed = breed;
         this.age = age;
+        this.o = o;
     }
 
     public void setOwner(Owner o) {
