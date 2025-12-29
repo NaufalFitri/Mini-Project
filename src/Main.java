@@ -1,12 +1,9 @@
-import Entities.Doctor;
-import Entities.Patient;
+import Data.Database;
 import GUIs.GUI;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
 
-import Data.Database;
+import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,7 +24,26 @@ public class Main {
             return;
         }
 
-        GUI gui = new GUI(db);
-        gui.show();
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            GUI gui = new GUI(db);
+            gui.setVisible(true);
+
+            gui.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                    if (gui.clockTimer != null) {
+                        gui.clockTimer.stop();
+                    }
+                    if (gui.refreshTimer != null) {
+                        gui.refreshTimer.stop();
+                    }
+                }
+            });
+        });
     }
 }

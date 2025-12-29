@@ -9,12 +9,12 @@ public class Patient {
         Female,
     }
 
-    private final String name;
+    private String name;
     private int id;
     private String diagnose;
-    private final String species;
-    private final String breed;
-    private final int age;
+    private String species;
+    private String breed;
+    private int age;
     private Gender gender = null;
     private Owner o = null;
 
@@ -44,6 +44,26 @@ public class Patient {
 
     public void setDiagnose(String diagnose) {
         this.diagnose = diagnose;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSpecies(String species) {
+        this.species = species;
+    }
+
+    public void setBreed(String breed) {
+        this.breed = breed;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setGender(Gender g) {
+        this.gender = g;
     }
 
     public String getDiagnosis() {
@@ -77,19 +97,5 @@ public class Patient {
     public Gender getGender() {
         return gender;
     }
-    
-//    public isBeingTreated()
-//    {
-//        return isBeingTreated;
-//    }
-//
-//    public getRoomID()
-//    {
-//        return roomID;
-//    }
-//
-//    public getCurrentPatient()
-//    {
-//        return getCurrentPatient;
-//    }
+
 }

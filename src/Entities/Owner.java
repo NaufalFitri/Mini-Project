@@ -5,9 +5,9 @@ import Exceptions.InvalidPhoneEx;
 public class Owner {
 
     private int id;
-    private final String name;
-    private final String phone;
-    private final String address;
+    private String name;
+    private String phone;
+    private String address;
 
     public Owner(int id, String name, String phone, String address) throws InvalidPhoneEx {
 
@@ -43,8 +43,26 @@ public class Owner {
         return address;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPhone(String phone) throws InvalidPhoneEx {
+        if (phone.length() > 11) {
+            throw new InvalidPhoneEx(InvalidPhoneEx.Type.first);
+        }
+        try {
+            Integer.parseInt(phone);
+        } catch (NumberFormatException e) {
+            throw new InvalidPhoneEx(InvalidPhoneEx.Type.second);
+        }
+
+        this.phone = phone;
+
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
 }

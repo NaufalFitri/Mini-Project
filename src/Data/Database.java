@@ -376,7 +376,7 @@ public class Database {
 
     public String addTreatment(Statement stmt, TreatmentRoom tr) throws SQLException {
 
-        String statement = "INSERT INTO `treatments` (`treatment_id`, `vet_id`, `animal_id`, `room_id`, `date`, `diagnosis`, `notes`) VALUES (NULL, '" + tr.getAssignedDoctor().getId() + "', '" + tr.getCurrentPatient().getId() + "', '" + tr.getRoomNumber() + "', '" + tr.getTreatmentStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "', '" + tr.getCurrentPatient().getDiagnosis() + "', '" + String.join("\n", tr.generateReports()) + "')";
+        String statement = "INSERT INTO `treatments` (`treatment_id`, `vet_id`, `animal_id`, `room_id`, `date`, `diagnosis`, `notes`) VALUES (NULL, '" + tr.getAssignedDoctor().getId() + "', '" + tr.getCurrentPatient().getId() + "', '" + tr.getRoomID() + "', '" + tr.getTreatmentStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "', '" + tr.getCurrentPatient().getDiagnosis() + "', '" + String.join("\n", tr.generateReports()) + "')";
         int rows = stmt.executeUpdate(statement);
 
         return rows + " row(s) updated.";

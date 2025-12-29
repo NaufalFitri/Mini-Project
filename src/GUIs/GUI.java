@@ -22,17 +22,17 @@ public class GUI extends JFrame {
     private JPanel mainPanel;
     private CardLayout cardLayout;
     private JLabel clockLabel;
-    private Timer refreshTimer;
-    private Timer clockTimer;
+    public Timer refreshTimer;
+    public Timer clockTimer;
     private String currentPanel = "dashboard";
-    
+
     // Store table models for auto-refresh
     private DefaultTableModel diagnoseRoomModel;
     private DefaultTableModel treatmentRoomModel;
     private DefaultTableModel patientModel;
     private DefaultTableModel doctorModel;
     private DefaultTableModel ownerModel;
-    
+
     // Color scheme
     private final Color PRIMARY_COLOR = new Color(41, 128, 185);
     private final Color SECONDARY_COLOR = new Color(52, 152, 219);
@@ -41,7 +41,7 @@ public class GUI extends JFrame {
     private final Color BACKGROUND_COLOR = new Color(236, 240, 241);
     private final Color CARD_COLOR = Color.WHITE;
 
-    public GUI() {
+    public GUI(Database database) {
         setTitle("AnimalsCare - Clinic Management System");
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,14 +49,12 @@ public class GUI extends JFrame {
 
         // Initialize database
         try {
-            database = new Database();
-            database.getConnection();
-            database.initialize();
+            this.database = database;
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Database connection failed: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Database connection failed: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
 
@@ -205,12 +203,12 @@ public class GUI extends JFrame {
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         btn.addActionListener(e -> {
             cardLayout.show(mainPanel, panelName);
             currentPanel = panelName;
         });
-        
+
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btn.setBackground(SECONDARY_COLOR);
@@ -239,30 +237,30 @@ public class GUI extends JFrame {
         JPanel statsPanel = new JPanel(new GridLayout(2, 3, 20, 20));
         statsPanel.setBackground(BACKGROUND_COLOR);
 
-        statsPanel.add(createStatCard("Total Patients", 
-            String.valueOf(database.getPatientList().size()), PRIMARY_COLOR));
-        statsPanel.add(createStatCard("Total Doctors", 
-            String.valueOf(database.getDoctorList().size()), SUCCESS_COLOR));
-        statsPanel.add(createStatCard("Total Owners", 
-            String.valueOf(database.getOwnersList().size()), SECONDARY_COLOR));
-        
+        statsPanel.add(createStatCard("Total Patients",
+                String.valueOf(database.getPatientList().size()), PRIMARY_COLOR));
+        statsPanel.add(createStatCard("Total Doctors",
+                String.valueOf(database.getDoctorList().size()), SUCCESS_COLOR));
+        statsPanel.add(createStatCard("Total Owners",
+                String.valueOf(database.getOwnersList().size()), SECONDARY_COLOR));
+
         long occupiedDiagnose = database.getDiagnoseRooms().stream()
-            .filter(DiagnoseRoom::isOccupied).count();
-        statsPanel.add(createStatCard("Diagnose Rooms", 
-            occupiedDiagnose + " / " + database.getDiagnoseRooms().size(), 
-            new Color(155, 89, 182)));
-        
+                .filter(DiagnoseRoom::isOccupied).count();
+        statsPanel.add(createStatCard("Diagnose Rooms",
+                occupiedDiagnose + " / " + database.getDiagnoseRooms().size(),
+                new Color(155, 89, 182)));
+
         long occupiedTreatment = database.getTreatmentRooms().stream()
-            .filter(TreatmentRoom::isOccupied).count();
-        statsPanel.add(createStatCard("Treatment Rooms", 
-            occupiedTreatment + " / " + database.getTreatmentRooms().size(), 
-            new Color(230, 126, 34)));
-        
-        statsPanel.add(createStatCard("Available Rooms", 
-            String.valueOf(database.getDiagnoseRooms().size() + 
-                         database.getTreatmentRooms().size() - 
-                         occupiedDiagnose - occupiedTreatment), 
-            new Color(26, 188, 156)));
+                .filter(TreatmentRoom::isOccupied).count();
+        statsPanel.add(createStatCard("Treatment Rooms",
+                occupiedTreatment + " / " + database.getTreatmentRooms().size(),
+                new Color(230, 126, 34)));
+
+        statsPanel.add(createStatCard("Available Rooms",
+                String.valueOf(database.getDiagnoseRooms().size() +
+                        database.getTreatmentRooms().size() -
+                        occupiedDiagnose - occupiedTreatment),
+                new Color(26, 188, 156)));
 
         panel.add(statsPanel, BorderLayout.CENTER);
         return panel;
@@ -272,8 +270,8 @@ public class GUI extends JFrame {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(CARD_COLOR);
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(color, 3),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+                BorderFactory.createLineBorder(color, 3),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Arial", Font.PLAIN, 16));
@@ -313,7 +311,7 @@ public class GUI extends JFrame {
         table.setFont(new Font("Arial", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         table.getTableHeader().setBackground(PRIMARY_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setForeground(Color.BLACK);
 
         // Populate table
         updateDiagnoseRoomTable(diagnoseRoomModel);
@@ -366,7 +364,7 @@ public class GUI extends JFrame {
         table.setFont(new Font("Arial", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         table.getTableHeader().setBackground(PRIMARY_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setForeground(Color.BLACK);
 
         updateTreatmentRoomTable(treatmentRoomModel);
 
@@ -414,7 +412,7 @@ public class GUI extends JFrame {
         table.setFont(new Font("Arial", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         table.getTableHeader().setBackground(PRIMARY_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setForeground(Color.BLACK);
 
         updatePatientTable(patientModel);
 
@@ -468,7 +466,7 @@ public class GUI extends JFrame {
         table.setFont(new Font("Arial", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         table.getTableHeader().setBackground(PRIMARY_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setForeground(Color.BLACK);
 
         updateDoctorTable(doctorModel);
 
@@ -519,7 +517,7 @@ public class GUI extends JFrame {
         table.setFont(new Font("Arial", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         table.getTableHeader().setBackground(PRIMARY_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setForeground(Color.BLACK);
 
         updateOwnerTable(ownerModel);
 
@@ -565,12 +563,12 @@ public class GUI extends JFrame {
         model.setRowCount(0);
         for (DiagnoseRoom room : database.getDiagnoseRooms()) {
             model.addRow(new Object[]{
-                room.getRoomID(),
-                room.getRoomNumber(),
-                room.isOccupied() ? "Occupied" : "Available",
-                room.getCurrentPatient() != null ? room.getCurrentPatient().getName() : "-",
-                room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-",
-                "View"
+                    room.getRoomID(),
+                    room.getRoomNumber(),
+                    room.isOccupied() ? "Occupied" : "Available",
+                    room.getCurrentPatient() != null ? room.getCurrentPatient().getName() : "-",
+                    room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-",
+                    "View"
             });
         }
     }
@@ -581,15 +579,15 @@ public class GUI extends JFrame {
             String startTime = "-";
             if (room.getTreatmentStart() != null) {
                 startTime = room.getTreatmentStart()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
             }
             model.addRow(new Object[]{
-                room.getRoomID(),
-                room.getRoomNumber(),
-                room.isOccupied() ? "Occupied" : "Available",
-                room.getCurrentPatient() != null ? room.getCurrentPatient().getName() : "-",
-                room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-",
-                startTime
+                    room.getRoomID(),
+                    room.getRoomNumber(),
+                    room.isOccupied() ? "Occupied" : "Available",
+                    room.getCurrentPatient() != null ? room.getCurrentPatient().getName() : "-",
+                    room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-",
+                    startTime
             });
         }
     }
@@ -598,13 +596,13 @@ public class GUI extends JFrame {
         model.setRowCount(0);
         for (Patient patient : database.getPatientList()) {
             model.addRow(new Object[]{
-                patient.getId(),
-                patient.getName(),
-                patient.getSpecies(),
-                patient.getBreed(),
-                patient.getAge(),
-                patient.getGender().name(),
-                patient.getOwner() != null ? patient.getOwner().getName() : "N/A"
+                    patient.getId(),
+                    patient.getName(),
+                    patient.getSpecies(),
+                    patient.getBreed(),
+                    patient.getAge(),
+                    patient.getGender().name(),
+                    patient.getOwner() != null ? patient.getOwner().getName() : "N/A"
             });
         }
     }
@@ -613,10 +611,10 @@ public class GUI extends JFrame {
         model.setRowCount(0);
         for (Doctor doctor : database.getDoctorList()) {
             model.addRow(new Object[]{
-                doctor.getId(),
-                doctor.getName(),
-                doctor.getField().name(),
-                doctor.getPhone()
+                    doctor.getId(),
+                    doctor.getName(),
+                    doctor.getField().name(),
+                    doctor.getPhone()
             });
         }
     }
@@ -625,10 +623,10 @@ public class GUI extends JFrame {
         model.setRowCount(0);
         for (Owner owner : database.getOwnersList()) {
             model.addRow(new Object[]{
-                owner.getId(),
-                owner.getName(),
-                owner.getPhone(),
-                owner.getAddress()
+                    owner.getId(),
+                    owner.getName(),
+                    owner.getPhone(),
+                    owner.getAddress()
             });
         }
     }
@@ -660,8 +658,8 @@ public class GUI extends JFrame {
         panel.add(new JLabel("Doctor:"));
         panel.add(doctorCombo);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Start Diagnosis", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Start Diagnosis", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION && roomCombo.getSelectedItem() != null) {
             String selectedRoom = (String) roomCombo.getSelectedItem();
@@ -669,8 +667,8 @@ public class GUI extends JFrame {
             int doctorIndex = doctorCombo.getSelectedIndex();
 
             DiagnoseRoom room = database.getDiagnoseRooms().stream()
-                .filter(r -> r.getRoomNumber().equals(selectedRoom))
-                .findFirst().orElse(null);
+                    .filter(r -> r.getRoomNumber().equals(selectedRoom))
+                    .findFirst().orElse(null);
 
             if (room != null) {
                 Patient patient = database.getPatientList().get(patientIndex);
@@ -691,14 +689,14 @@ public class GUI extends JFrame {
 
         int roomId = (int) table.getValueAt(selectedRow, 0);
         DiagnoseRoom room = database.getDiagnoseRooms().stream()
-            .filter(r -> r.getRoomID() == roomId)
-            .findFirst().orElse(null);
+                .filter(r -> r.getRoomID() == roomId)
+                .findFirst().orElse(null);
 
         if (room != null && room.isOccupied()) {
-            String notes = JOptionPane.showInputDialog(this, 
-                "Enter diagnosis notes:", 
-                "Record Diagnosis", 
-                JOptionPane.PLAIN_MESSAGE);
+            String notes = JOptionPane.showInputDialog(this,
+                    "Enter diagnosis notes:",
+                    "Record Diagnosis",
+                    JOptionPane.PLAIN_MESSAGE);
 
             if (notes != null && !notes.trim().isEmpty()) {
                 room.recordDiagnosis(notes);
@@ -718,14 +716,14 @@ public class GUI extends JFrame {
 
         int roomId = (int) table.getValueAt(selectedRow, 0);
         DiagnoseRoom room = database.getDiagnoseRooms().stream()
-            .filter(r -> r.getRoomID() == roomId)
-            .findFirst().orElse(null);
+                .filter(r -> r.getRoomID() == roomId)
+                .findFirst().orElse(null);
 
         if (room != null && room.isOccupied()) {
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Finish diagnosis for " + room.getCurrentPatient().getName() + "?",
-                "Confirm", 
-                JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Finish diagnosis for " + room.getCurrentPatient().getName() + "?",
+                    "Confirm",
+                    JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 room.finishDiagnosis();
@@ -769,8 +767,8 @@ public class GUI extends JFrame {
         panel.add(new JLabel("Medications (comma-separated):"));
         panel.add(medicationsField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Start Treatment", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Start Treatment", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION && roomCombo.getSelectedItem() != null) {
             String selectedRoom = (String) roomCombo.getSelectedItem();
@@ -778,15 +776,15 @@ public class GUI extends JFrame {
             int doctorIndex = doctorCombo.getSelectedIndex();
 
             TreatmentRoom room = database.getTreatmentRooms().stream()
-                .filter(r -> r.getRoomNumber().equals(selectedRoom))
-                .findFirst().orElse(null);
+                    .filter(r -> r.getRoomNumber().equals(selectedRoom))
+                    .findFirst().orElse(null);
 
             if (room != null) {
                 Patient patient = database.getPatientList().stream()
-                    .filter(p -> p.getDiagnosis() != null)
-                    .toArray(Patient[]::new)[patientIndex];
+                        .filter(p -> p.getDiagnosis() != null)
+                        .toArray(Patient[]::new)[patientIndex];
                 Doctor doctor = database.getDoctorList().get(doctorIndex);
-                
+
                 List<String> medications = new ArrayList<>();
                 String[] meds = medicationsField.getText().split(",");
                 for (String med : meds) {
@@ -809,27 +807,27 @@ public class GUI extends JFrame {
 
         int roomId = (int) table.getValueAt(selectedRow, 0);
         TreatmentRoom room = database.getTreatmentRooms().stream()
-            .filter(r -> r.getRoomID() == roomId)
-            .findFirst().orElse(null);
+                .filter(r -> r.getRoomID() == roomId)
+                .findFirst().orElse(null);
 
         if (room != null && room.isOccupied()) {
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Finish treatment for " + room.getCurrentPatient().getName() + "?",
-                "Confirm", 
-                JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Finish treatment for " + room.getCurrentPatient().getName() + "?",
+                    "Confirm",
+                    JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 room.finishTreatment();
-                
+
                 try {
                     Statement stmt = database.getConnection().createStatement();
                     database.addTreatment(stmt, room);
                     JOptionPane.showMessageDialog(this, "Treatment finished and saved!");
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Error saving treatment: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this,
+                            "Error saving treatment: " + ex.getMessage());
                 }
-                
+
                 updateTreatmentRoomTable(model);
             }
         } else {
@@ -843,15 +841,15 @@ public class GUI extends JFrame {
         JTextField breedField = new JTextField();
         JTextField ageField = new JTextField();
         JComboBox<String> genderCombo = new JComboBox<>(
-            new String[]{"Male", "Female"});
-        
+                new String[]{"Male", "Female"});
+
         JComboBox<String> ownerCombo = new JComboBox<>();
         for (Owner o : database.getOwnersList()) {
             if (o != null) {
-                String ownerInfo = o.getName() + " (ID: " + 
-                                 o.getId() + ")";
-                if (ownerCombo.getItemCount() == 0 || 
-                    !ownerCombo.getItemAt(ownerCombo.getItemCount()-1).equals(ownerInfo)) {
+                String ownerInfo = o.getName() + " (ID: " +
+                        o.getId() + ")";
+                if (ownerCombo.getItemCount() == 0 ||
+                        !ownerCombo.getItemAt(ownerCombo.getItemCount()-1).equals(ownerInfo)) {
                     ownerCombo.addItem(ownerInfo);
                 }
             }
@@ -871,8 +869,8 @@ public class GUI extends JFrame {
         panel.add(new JLabel("Owner:"));
         panel.add(ownerCombo);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Add New Patient", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Add New Patient", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
@@ -881,25 +879,25 @@ public class GUI extends JFrame {
                 String breed = breedField.getText();
                 int age = Integer.parseInt(ageField.getText());
                 String gender = (String) genderCombo.getSelectedItem();
-                
+
                 String ownerStr = (String) ownerCombo.getSelectedItem();
                 int ownerId = Integer.parseInt(ownerStr.substring(
-                    ownerStr.indexOf("ID: ") + 4, ownerStr.length() -    1));
-                
+                        ownerStr.indexOf("ID: ") + 4, ownerStr.length() -    1));
+
                 Owner owner = database.getOwnersList().stream()
-                    .filter(o -> o.getId() == ownerId)
-                    .findFirst().orElse(null);
+                        .filter(o -> o.getId() == ownerId)
+                        .findFirst().orElse(null);
 
                 if (owner != null) {
                     Statement stmt = database.getConnection().createStatement();
-                    String msg = database.insertPatient(stmt, name, species, 
-                                                       breed, age, gender, owner);
+                    String msg = database.insertPatient(stmt, name, species,
+                            breed, age, gender, owner);
                     updatePatientTable(model);
                     JOptionPane.showMessageDialog(this, msg);
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error adding patient: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this,
+                        "Error adding patient: " + ex.getMessage());
             }
         }
     }
@@ -913,8 +911,8 @@ public class GUI extends JFrame {
 
         int patientId = (int) table.getValueAt(selectedRow, 0);
         Patient patient = database.getPatientList().stream()
-            .filter(p -> p.getId() == patientId)
-            .findFirst().orElse(null);
+                .filter(p -> p.getId() == patientId)
+                .findFirst().orElse(null);
 
         if (patient != null) {
             StringBuilder details = new StringBuilder();
@@ -925,14 +923,14 @@ public class GUI extends JFrame {
             details.append("Breed: ").append(patient.getBreed()).append("\n");
             details.append("Age: ").append(patient.getAge()).append("\n");
             details.append("Gender: ").append(patient.getGender().name()).append("\n");
-            
+
             if (patient.getOwner() != null) {
                 details.append("\nOwner Information:\n");
                 details.append("Name: ").append(patient.getOwner().getName()).append("\n");
                 details.append("Phone: ").append(patient.getOwner().getPhone()).append("\n");
                 details.append("Address: ").append(patient.getOwner().getAddress()).append("\n");
             }
-            
+
             if (patient.getDiagnosis() != null) {
                 details.append("\nDiagnosis: ").append(patient.getDiagnosis()).append("\n");
             }
@@ -940,8 +938,8 @@ public class GUI extends JFrame {
             JTextArea textArea = new JTextArea(details.toString());
             textArea.setEditable(false);
             textArea.setFont(new Font("Arial", Font.PLAIN, 14));
-            JOptionPane.showMessageDialog(this, new JScrollPane(textArea), 
-                "Patient Details", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, new JScrollPane(textArea),
+                    "Patient Details", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -958,8 +956,8 @@ public class GUI extends JFrame {
         panel.add(new JLabel("Specialization:"));
         panel.add(fieldCombo);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Add New Doctor", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Add New Doctor", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
@@ -972,8 +970,8 @@ public class GUI extends JFrame {
                 updateDoctorTable(model);
                 JOptionPane.showMessageDialog(this, msg);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error adding doctor: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this,
+                        "Error adding doctor: " + ex.getMessage());
             }
         }
     }
@@ -987,8 +985,8 @@ public class GUI extends JFrame {
 
         int doctorId = (int) table.getValueAt(selectedRow, 0);
         Doctor doctor = database.getDoctorList().stream()
-            .filter(d -> d.getId() == doctorId)
-            .findFirst().orElse(null);
+                .filter(d -> d.getId() == doctorId)
+                .findFirst().orElse(null);
 
         if (doctor != null) {
             JTextField nameField = new JTextField(doctor.getName());
@@ -1004,16 +1002,16 @@ public class GUI extends JFrame {
             panel.add(new JLabel("Specialization:"));
             panel.add(fieldCombo);
 
-            int result = JOptionPane.showConfirmDialog(this, panel, 
-                "Edit Doctor", JOptionPane.OK_CANCEL_OPTION);
+            int result = JOptionPane.showConfirmDialog(this, panel,
+                    "Edit Doctor", JOptionPane.OK_CANCEL_OPTION);
 
             if (result == JOptionPane.OK_OPTION) {
                 try {
                     Doctor updatedDoctor = new Doctor(
-                        doctor.getId(),
-                        nameField.getText(),
-                        ((Doctor.field) fieldCombo.getSelectedItem()).name(),
-                        phoneField.getText()
+                            doctor.getId(),
+                            nameField.getText(),
+                            ((Doctor.field) fieldCombo.getSelectedItem()).name(),
+                            phoneField.getText()
                     );
 
                     Statement stmt = database.getConnection().createStatement();
@@ -1021,8 +1019,8 @@ public class GUI extends JFrame {
                     updateDoctorTable(model);
                     JOptionPane.showMessageDialog(this, msg);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Error updating doctor: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this,
+                            "Error updating doctor: " + ex.getMessage());
                 }
             }
         }
@@ -1037,14 +1035,14 @@ public class GUI extends JFrame {
 
         int doctorId = (int) table.getValueAt(selectedRow, 0);
         Doctor doctor = database.getDoctorList().stream()
-            .filter(d -> d.getId() == doctorId)
-            .findFirst().orElse(null);
+                .filter(d -> d.getId() == doctorId)
+                .findFirst().orElse(null);
 
         if (doctor != null) {
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Are you sure you want to delete Dr. " + doctor.getName() + "?",
-                "Confirm Delete", 
-                JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete Dr. " + doctor.getName() + "?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
@@ -1053,8 +1051,8 @@ public class GUI extends JFrame {
                     updateDoctorTable(model);
                     JOptionPane.showMessageDialog(this, msg);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Error deleting doctor: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this,
+                            "Error deleting doctor: " + ex.getMessage());
                 }
             }
         }
@@ -1069,8 +1067,8 @@ public class GUI extends JFrame {
 
         int patientId = (int) table.getValueAt(selectedRow, 0);
         Patient patient = database.getPatientList().stream()
-            .filter(p -> p.getId() == patientId)
-            .findFirst().orElse(null);
+                .filter(p -> p.getId() == patientId)
+                .findFirst().orElse(null);
 
         if (patient != null) {
             JTextField nameField = new JTextField(patient.getName());
@@ -1081,11 +1079,11 @@ public class GUI extends JFrame {
             breedField.setEditable(false); // Breed is final
             JTextField ageField = new JTextField(String.valueOf(patient.getAge()));
             ageField.setEditable(false); // Age is final
-            
+
             JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Male", "Female"});
             genderCombo.setSelectedItem(patient.getGender().name());
             genderCombo.setEnabled(false); // Gender is final
-            
+
             JComboBox<String> ownerCombo = new JComboBox<>();
             for (Patient p : database.getPatientList()) {
                 if (p.getOwner() != null) {
@@ -1100,7 +1098,7 @@ public class GUI extends JFrame {
                     if (!exists) ownerCombo.addItem(ownerInfo);
                 }
             }
-            
+
             if (patient.getOwner() != null) {
                 ownerCombo.setSelectedItem(patient.getOwner().getName() + " (ID: " + patient.getOwner().getId() + ")");
             }
@@ -1121,19 +1119,19 @@ public class GUI extends JFrame {
             panel.add(new JLabel("Note: Only owner can be changed"));
             panel.add(new JLabel(""));
 
-            int result = JOptionPane.showConfirmDialog(this, panel, 
-                "Edit Patient", JOptionPane.OK_CANCEL_OPTION);
+            int result = JOptionPane.showConfirmDialog(this, panel,
+                    "Edit Patient", JOptionPane.OK_CANCEL_OPTION);
 
             if (result == JOptionPane.OK_OPTION) {
                 try {
                     String ownerStr = (String) ownerCombo.getSelectedItem();
                     int ownerId = Integer.parseInt(ownerStr.substring(
-                        ownerStr.indexOf("ID: ") + 4, ownerStr.length() - 1));
-                    
+                            ownerStr.indexOf("ID: ") + 4, ownerStr.length() - 1));
+
                     Owner newOwner = database.getPatientList().stream()
-                        .map(Patient::getOwner)
-                        .filter(o -> o != null && o.getId() == ownerId)
-                        .findFirst().orElse(null);
+                            .map(Patient::getOwner)
+                            .filter(o -> o != null && o.getId() == ownerId)
+                            .findFirst().orElse(null);
 
                     if (newOwner != null) {
                         patient.setOwner(newOwner);
@@ -1143,8 +1141,8 @@ public class GUI extends JFrame {
                         JOptionPane.showMessageDialog(this, msg);
                     }
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Error updating patient: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this,
+                            "Error updating patient: " + ex.getMessage());
                 }
             }
         }
@@ -1159,16 +1157,16 @@ public class GUI extends JFrame {
 
         int patientId = (int) table.getValueAt(selectedRow, 0);
         Patient patient = database.getPatientList().stream()
-            .filter(p -> p.getId() == patientId)
-            .findFirst().orElse(null);
+                .filter(p -> p.getId() == patientId)
+                .findFirst().orElse(null);
 
         if (patient != null) {
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Are you sure you want to delete patient: " + patient.getName() + "?\n" +
-                "This action cannot be undone!",
-                "Confirm Delete", 
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete patient: " + patient.getName() + "?\n" +
+                            "This action cannot be undone!",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
@@ -1177,8 +1175,8 @@ public class GUI extends JFrame {
                     updatePatientTable(model);
                     JOptionPane.showMessageDialog(this, msg);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Error deleting patient: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this,
+                            "Error deleting patient: " + ex.getMessage());
                 }
             }
         }
@@ -1193,30 +1191,44 @@ public class GUI extends JFrame {
 
         int ownerId = (int) table.getValueAt(selectedRow, 0);
         Owner owner = database.getPatientList().stream()
-            .map(Patient::getOwner)
-            .filter(o -> o != null && o.getId() == ownerId)
-            .findFirst().orElse(null);
+                .map(Patient::getOwner)
+                .filter(o -> o != null && o.getId() == ownerId)
+                .findFirst().orElse(null);
 
         if (owner != null) {
+
             JTextField nameField = new JTextField(owner.getName());
-            nameField.setEditable(false);
             JTextField phoneField = new JTextField(owner.getPhone());
-            phoneField.setEditable(false);
             JTextField addressField = new JTextField(owner.getAddress());
-            addressField.setEditable(false);
 
-            JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-            panel.add(new JLabel("Name (readonly):"));
+            JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
+            panel.add(new JLabel("Name:"));
             panel.add(nameField);
-            panel.add(new JLabel("Phone (readonly):"));
+            panel.add(new JLabel("Phone:"));
             panel.add(phoneField);
-            panel.add(new JLabel("Address (readonly):"));
+            panel.add(new JLabel("Address:"));
             panel.add(addressField);
-            panel.add(new JLabel("Note: Owner fields are final"));
-            panel.add(new JLabel(""));
 
-            JOptionPane.showMessageDialog(this, panel, 
-                "Owner Information (Read-Only)", JOptionPane.INFORMATION_MESSAGE);
+            int result = JOptionPane.showConfirmDialog(this, panel,
+                    "Edit Owner Information", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    owner.setName(nameField.getText());
+                    owner.setPhone(phoneField.getText());
+                    owner.setAddress(addressField.getText());
+
+                    Statement stmt = database.getConnection().createStatement();
+                    String msg = database.updateOwner(stmt, owner);
+                    updateOwnerTable(model);
+                    JOptionPane.showMessageDialog(this, msg);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error editing owner: " + ex.getMessage());
+                }
+
+                JOptionPane.showMessageDialog(this, "Owner updated successfully!");
+            }
         }
     }
 
@@ -1228,32 +1240,31 @@ public class GUI extends JFrame {
         }
 
         int ownerId = (int) table.getValueAt(selectedRow, 0);
-        Owner owner = database.getPatientList().stream()
-            .map(Patient::getOwner)
-            .filter(o -> o != null && o.getId() == ownerId)
-            .findFirst().orElse(null);
+        Owner owner = database.getOwnersList().stream()
+                .filter(o -> o.getId() == ownerId)
+                .findFirst().orElse(null);
 
         if (owner != null) {
             // Check if owner has patients
             long patientCount = database.getPatientList().stream()
-                .filter(p -> p.getOwner() != null && p.getOwner().getId() == ownerId)
-                .count();
+                    .filter(p -> p.getOwner() != null && p.getOwner().getId() == ownerId)
+                    .count();
 
             if (patientCount > 0) {
-                JOptionPane.showMessageDialog(this, 
-                    "Cannot delete owner: " + owner.getName() + "\n" +
-                    "This owner has " + patientCount + " patient(s) assigned.\n" +
-                    "Please delete or reassign all patients first.",
-                    "Delete Failed", 
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Cannot delete owner: " + owner.getName() + "\n" +
+                                "This owner has " + patientCount + " patient(s) assigned.\n" +
+                                "Please delete or reassign all patients first.",
+                        "Delete Failed",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Are you sure you want to delete owner: " + owner.getName() + "?",
-                "Confirm Delete", 
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete owner: " + owner.getName() + "?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
@@ -1262,8 +1273,8 @@ public class GUI extends JFrame {
                     updateOwnerTable(model);
                     JOptionPane.showMessageDialog(this, msg);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Error deleting owner: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this,
+                            "Error deleting owner: " + ex.getMessage());
                 }
             }
         }
@@ -1282,8 +1293,8 @@ public class GUI extends JFrame {
         panel.add(new JLabel("Address:"));
         panel.add(addressField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Add New Owner", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Add New Owner", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
@@ -1296,34 +1307,9 @@ public class GUI extends JFrame {
                 updateOwnerTable(model);
                 JOptionPane.showMessageDialog(this, msg);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error adding owner: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this,
+                        "Error adding owner: " + ex.getMessage());
             }
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            GUI gui = new GUI();
-            gui.setVisible(true);
-            
-            // Add window listener to stop timers when closing
-            gui.addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                    if (gui.clockTimer != null) {
-                        gui.clockTimer.stop();
-                    }
-                    if (gui.refreshTimer != null) {
-                        gui.refreshTimer.stop();
-                    }
-                }
-            });
-        });
     }
 }
