@@ -81,7 +81,7 @@ public class Database {
                         try {
                             Owner o = null;
                             for (Owner t : ownersList) {
-                                if (t.getId() == res.getInt(7)) {
+                                if (t.getId() == res.getInt(9)) {
                                     o = t;
                                 }
                             }
@@ -90,6 +90,15 @@ public class Database {
                                 continue;
                             }
                             Patient p = new Patient(res.getInt(1), res.getString(2), res.getString(3), res.getString(4), res.getInt(5), res.getString(6), o);
+
+                            List<String> medications = new ArrayList<>();
+                            String[] meds = res.getString(8).split(",");
+                            for (String med : meds) {
+                                medications.add(med.trim());
+                            }
+
+                            p.setDiagnose(res.getString(7));
+                            p.setMedications(medications);
                             patientList.add(p);
                         } catch (InvalidGenderEx e) {
                             e.printStackTrace();
@@ -275,7 +284,7 @@ public class Database {
             i++;
         }
 
-        String statement = "UPDATE `animals` SET `name` = '" + up.getName() + "', `species` = '" + up.getSpecies() + "', `breed` = '" + up.getBreed() + "', `age` = " + up.getAge() + ", `gender` = '" + up.getGender().name() + "', `owner_id` = " + up.getOwner().getId() + " WHERE `animals`.`animal_id` = " + up.getId();
+        String statement = "UPDATE `animals` SET `name` = '" + up.getName() + "', `species` = '" + up.getSpecies() + "', `breed` = '" + up.getBreed() + "', `age` = " + up.getAge() + ", `gender` = '" + up.getGender().name() + "', `owner_id` = " + up.getOwner().getId() + ", `notes` = '" + up.getDiagnosis() + "', `medications` = '" + String.join(", ", up.getMedications()) + "' WHERE `animals`.`animal_id` = " + up.getId();
         int rows = stmt.executeUpdate(statement);
 
         return rows + " row(s) updated.";

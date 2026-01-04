@@ -2,6 +2,9 @@ package Entities;
 
 import Exceptions.InvalidGenderEx;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Patient {
 
     public enum Gender {
@@ -17,6 +20,8 @@ public class Patient {
     private int age;
     private Gender gender = null;
     private Owner o = null;
+
+    private List<String> medications = new ArrayList<>();
 
     public Patient(int id, String name, String species, String breed, int age, String gender, Owner o) throws InvalidGenderEx
     {
@@ -44,6 +49,14 @@ public class Patient {
 
     public void setDiagnose(String diagnose) {
         this.diagnose = diagnose;
+    }
+
+    public void setMedications(List<String> m) {
+        medications = m;
+    }
+
+    public List<String> getMedications() {
+        return medications;
     }
 
     public void setName(String name) {

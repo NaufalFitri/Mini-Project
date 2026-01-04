@@ -673,7 +673,7 @@ public class GUI extends JFrame {
             if (room != null) {
                 Patient patient = database.getPatientList().get(patientIndex);
                 Doctor doctor = database.getDoctorList().get(doctorIndex);
-                room.startDiagnosis(patient, doctor);
+                room.enterRoom(patient, doctor);
                 updateDiagnoseRoomTable(model);
                 JOptionPane.showMessageDialog(this, "Diagnosis started successfully!");
             }
@@ -693,14 +693,44 @@ public class GUI extends JFrame {
                 .findFirst().orElse(null);
 
         if (room != null && room.isOccupied()) {
-            String notes = JOptionPane.showInputDialog(this,
-                    "Enter diagnosis notes:",
-                    "Record Diagnosis",
-                    JOptionPane.PLAIN_MESSAGE);
+            JTextField medicationsField = new JTextField();
+            JTextField notesField = new JTextField();
 
-            if (notes != null && !notes.trim().isEmpty()) {
-                room.recordDiagnosis(notes);
-                JOptionPane.showMessageDialog(this, "Notes recorded successfully!");
+            JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+
+            panel.add(new JLabel("Enter diagnosis notes:"));
+            panel.add(notesField);
+            panel.add(new JLabel("Medications (comma-separated):"));
+            panel.add(medicationsField);
+
+            int result = JOptionPane.showConfirmDialog(this, panel,
+                    "Record Diagnosis", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.OK_OPTION) {
+                String notes = notesField.getText();
+                String medication = medicationsField.getText();
+                if (notes != null && !notes.trim().isEmpty() && medication != null && !medication.trim().isEmpty()) {
+                    List<String> medications = new ArrayList<>();
+                    String[] meds = medicationsField.getText().split(",");
+                    for (String med : meds) {
+                        medications.add(med.trim());
+                    }
+
+                    room.getCurrentPatient().setDiagnose(notes);
+                    room.getCurrentPatient().setMedications(medications);
+
+                    try {
+                        Statement stmt = database.getConnection().createStatement();
+                        String msg = database.updatePatient(stmt, room.getCurrentPatient());
+                        JOptionPane.showMessageDialog(this, "Notes recorded successfully!");
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(this, e.getMessage());
+                    }
+
+                } else {
+                    JOptionPane.showMessageDialog(this, "Please complete the notes!");
+                }
+
             }
         } else {
             JOptionPane.showMessageDialog(this, "Room is not occupied!");
@@ -755,8 +785,6 @@ public class GUI extends JFrame {
             doctorCombo.addItem(doctor.getName() + " - " + doctor.getField().name());
         }
 
-        JTextField medicationsField = new JTextField();
-
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.add(new JLabel("Room:"));
         panel.add(roomCombo);
@@ -764,8 +792,6 @@ public class GUI extends JFrame {
         panel.add(patientCombo);
         panel.add(new JLabel("Doctor:"));
         panel.add(doctorCombo);
-        panel.add(new JLabel("Medications (comma-separated):"));
-        panel.add(medicationsField);
 
         int result = JOptionPane.showConfirmDialog(this, panel,
                 "Start Treatment", JOptionPane.OK_CANCEL_OPTION);
@@ -785,13 +811,7 @@ public class GUI extends JFrame {
                         .toArray(Patient[]::new)[patientIndex];
                 Doctor doctor = database.getDoctorList().get(doctorIndex);
 
-                List<String> medications = new ArrayList<>();
-                String[] meds = medicationsField.getText().split(",");
-                for (String med : meds) {
-                    medications.add(med.trim());
-                }
-
-                room.startTreatment(patient, doctor, medications);
+                room.enterRoom(patient, doctor);
                 updateTreatmentRoomTable(model);
                 JOptionPane.showMessageDialog(this, "Treatment started successfully!");
             }
@@ -817,7 +837,7 @@ public class GUI extends JFrame {
                     JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                room.finishTreatment();
+                room.exitRoom();
 
                 try {
                     Statement stmt = database.getConnection().createStatement();
@@ -931,8 +951,12 @@ public class GUI extends JFrame {
                 details.append("Address: ").append(patient.getOwner().getAddress()).append("\n");
             }
 
-            if (patient.getDiagnosis() != null) {
+            if (patient.getDiagnosis() != null && !patient.getDiagnosis().isEmpty()) {
                 details.append("\nDiagnosis: ").append(patient.getDiagnosis()).append("\n");
+            }
+
+            if (!patient.getMedications().isEmpty()) {
+                details.append("Medications: ").append(String.join(", ", patient.getMedications())).append("\n");
             }
 
             JTextArea textArea = new JTextArea(details.toString());

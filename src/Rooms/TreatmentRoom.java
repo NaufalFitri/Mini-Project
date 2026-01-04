@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TreatmentRoom extends Room {
+public class TreatmentRoom extends Room implements MedicalRoom {
 
     private String treatmentPlan;
     private List<String> medications;
@@ -19,17 +19,19 @@ public class TreatmentRoom extends Room {
         super(id, roomNumber);
     }
 
-    public void startTreatment(Patient p, Doctor d, List<String> medications) {
+    @Override
+    public void enterRoom(Patient p, Doctor d) {
         if (!super.isOccupied()) {
             treatmentStart = LocalDateTime.now();
-            this.medications = medications;
+            this.medications = p.getMedications();
             super.setCurrentPatient(p);
             super.setAssignedDoctor(d);
             super.setOccupied(true);
         }
     }
 
-    public void finishTreatment() {
+    @Override
+    public void exitRoom() {
         treatmentEnd = LocalDateTime.now();
     }
 
