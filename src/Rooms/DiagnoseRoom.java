@@ -3,14 +3,13 @@ package Rooms;
 import Entities.Doctor;
 import Entities.Patient;
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class DiagnoseRoom extends Room implements MedicalRoom {
 
     private LocalDateTime diagnosisStart;
     private LocalDateTime diagnosisEnd;
-    private List<Doctor> assignedDoctor;
-    private List<Patient> currentPatient;
+    private Doctor assignedDoctor;
+    private Patient currentPatient;
 
     public DiagnoseRoom(int id, String roomNumber, int maxPatients) {
         super(id, roomNumber, maxPatients);
@@ -21,7 +20,8 @@ public class DiagnoseRoom extends Room implements MedicalRoom {
         if (!super.isOccupied()) {
             diagnosisStart = LocalDateTime.now();
 
-            assignedDoctor.add(d);
+            this.assignedDoctor = d;
+            this.currentPatient = p;
             super.setOccupied(true);
         }
     }

@@ -43,7 +43,7 @@ public class Owner extends Entity {
     }
 
     public void setName(String name) {
-        this.name = name;
+        super.name = name;
     }
 
     public void setPhone(String phone) throws InvalidPhoneEx {

@@ -4,9 +4,10 @@ import Data.Database;
 import Entities.Doctor;
 import Entities.Owner;
 import Entities.Patient;
+import Exceptions.InvalidPhoneEx;
+import Exceptions.InvalidSpecializationEx;
 import Rooms.DiagnoseRoom;
 import Rooms.TreatmentRoom;
-import Rooms.WardRoom;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -25,7 +26,7 @@ public class GUI extends JFrame {
     private JLabel clockLabel;
     public Timer refreshTimer;
     public Timer clockTimer;
-    private String currentPanel = "dashboard";
+    public String currentPanel = "dashboard";
 
     // Store table models for auto-refresh
     private DefaultTableModel diagnoseRoomModel;
@@ -992,6 +993,20 @@ public class GUI extends JFrame {
                 String phone = phoneField.getText();
                 Doctor.field specialization = (Doctor.field) fieldCombo.getSelectedItem();
 
+                if (specialization == null) {
+                    throw new InvalidSpecializationEx("Specialization is invalid!");
+                }
+
+                if (phone.length() > 11 || phone.length() < 10) {
+                    throw new InvalidPhoneEx(InvalidPhoneEx.Type.first);
+                }
+
+                try {
+                    Integer.parseInt(phone);
+                } catch (NumberFormatException e) {
+                    throw new InvalidPhoneEx(InvalidPhoneEx.Type.second);
+                }
+
                 Statement stmt = database.getConnection().createStatement();
                 String msg = database.insertDoctor(stmt, name, specialization, phone);
                 updateDoctorTable(model);
@@ -1670,7 +1685,6 @@ private void editRoom(JTable table, DefaultTableModel model) {
     }
 }
 
-// 5. Add this method to delete a room
 private void deleteRoom(JTable table, DefaultTableModel model) {
     int selectedRow = table.getSelectedRow();
     if (selectedRow == -1) {
@@ -1733,17 +1747,6 @@ private void deleteRoom(JTable table, DefaultTableModel model) {
             ex.printStackTrace();
         }
     }
-}}
+}
 
-// ============================================================================
-// MANUAL INTEGRATION STEPS:
-// ============================================================================
-// 
-// 1. In initializeUI() method, add this line after adding owners panel:
-//    mainPanel.add(createRoomsPanel(), "rooms");
-//
-// 2. In createSidebar() method, add this line after the owners button:
-//    addMenuButton(sidebar, "Room Management", "rooms");
-//
-// 3. That's it! The room management feature is now integrated.
-// ============================================================================
+}

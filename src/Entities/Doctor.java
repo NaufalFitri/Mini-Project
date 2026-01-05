@@ -35,7 +35,7 @@ public class Doctor extends Entity {
             throw new InvalidSpecializationEx("Specialization " + specialization + " is invalid!");
         }
 
-        if (phone.length() > 11) {
+        if (phone.length() > 11 || phone.length() < 10) {
             throw new InvalidPhoneEx(InvalidPhoneEx.Type.first);
         }
 
@@ -71,6 +71,5 @@ public class Doctor extends Entity {
     {
         specialisedField = f;
     }
-
 
 }

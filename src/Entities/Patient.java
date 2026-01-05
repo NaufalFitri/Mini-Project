@@ -13,8 +13,8 @@ public class Patient extends Entity {
     }
 
     private String diagnose;
-    private String species;
-    private String breed;
+    private final String species;
+    private final String breed;
     private int age;
     private Gender gender = null;
     private Owner o = null;

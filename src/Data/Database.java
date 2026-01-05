@@ -8,7 +8,6 @@ import Exceptions.InvalidSpecializationEx;
 import Rooms.DiagnoseRoom;
 import Rooms.Room;
 import Rooms.TreatmentRoom;
-import Rooms.WardRoom;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
@@ -28,7 +27,6 @@ public class Database {
     private final List<Patient> patientList = new ArrayList<>();
     private final List<DiagnoseRoom> diagnoseRooms = new ArrayList<>();
     private final List<TreatmentRoom> treatmentRooms = new ArrayList<>();
-    private final List<WardRoom> wardRooms = new ArrayList<>();
     private final List<Owner> ownerList = new ArrayList<>();
 
     private void loadAllEntities(Statement stmt) throws SQLException {
@@ -40,13 +38,11 @@ public class Database {
         String statementTRoom = "SELECT * FROM rooms r JOIN room_types rt ON r.roomType_id = rt.roomType_id WHERE rt.type = 'Treatment'";
         String statementDoctor = "SELECT * FROM veterinarians";
         String statementPatient = "SELECT * FROM animals";
-        String statementWRoom = "SELECT * FROM rooms r JOIN room_types rt ON r.roomType_id = rt.roomType_id WHERE rt.type = 'Ward'";
         statements.add(statementOwners);
         statements.add(statementDRoom);
         statements.add(statementTRoom);
         statements.add(statementDoctor);
         statements.add(statementPatient);
-        statements.add(statementWRoom);
 
         int i = 1;
         for (String statement : statements){
@@ -111,9 +107,6 @@ public class Database {
                         }
 
                         break;
-                    case 6:
-                        wardRooms.add(new WardRoom(res.getInt(1), res.getString(2), res.getInt(3)));
-                        break;
                 }
             }
             i++;
@@ -155,10 +148,6 @@ public class Database {
 
     public List<TreatmentRoom> getTreatmentRooms() {
         return treatmentRooms;
-    }
-
-    public List<WardRoom> getWardRooms() {
-        return wardRooms;
     }
 
     public List<Owner> getOwnersList() {
@@ -261,10 +250,6 @@ public class Database {
                     case "Treatment":
                         TreatmentRoom TRoom = new TreatmentRoom(res.getInt(1), number, maxPatients);
                         treatmentRooms.add(TRoom);
-                        break;
-                    case "Ward":
-                        WardRoom WRoom = new WardRoom(res.getInt(1), number, maxPatients);
-                        wardRooms.add(WRoom);
                         break;
                 }
             }

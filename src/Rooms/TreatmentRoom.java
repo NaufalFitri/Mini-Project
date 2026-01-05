@@ -11,7 +11,7 @@ import java.util.List;
 public class TreatmentRoom extends Room implements MedicalRoom {
 
     private String treatmentPlan;
-    private List<String> medications;
+    private List<String> medications = new ArrayList<>();
     private LocalDateTime treatmentStart;
     private LocalDateTime treatmentEnd;
     private Doctor assignedDoctor;

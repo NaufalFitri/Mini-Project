@@ -1,6 +1,6 @@
 package Rooms;
 
-public abstract class Room {
+public class Room {
 
     private final int RoomID;
     private String roomNumber;
