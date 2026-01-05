@@ -3,7 +3,7 @@ package Entities;
 import Exceptions.InvalidPhoneEx;
 import Exceptions.InvalidSpecializationEx;
 
-public class Doctor {
+public class Doctor extends Entity {
 
     public enum field {
         Surgery,
@@ -16,13 +16,13 @@ public class Doctor {
         Anesthesiology,
     }
 
-    private int id;
-    private String name;
     private boolean isTreating;
     private field specialisedField = null;
     private String phone;
 
     public Doctor(int id,String name, String specialization, String phone) throws InvalidSpecializationEx, InvalidPhoneEx {
+
+        super(id, name);
 
         for (field f : field.values()) {
             if (f.name().equals(specialization)) {
@@ -45,30 +45,21 @@ public class Doctor {
             throw new InvalidPhoneEx(InvalidPhoneEx.Type.second);
         }
 
-        this.id = id;
-        this.name = name;
         this.phone = phone;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
+    @Override
     public int getId() {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
     public String getPhone() {
         return phone;
-    }
-
-    public boolean isTreating()
-    {
-        return isTreating;
     }
 
     public field getField()

@@ -5,15 +5,13 @@ import Exceptions.InvalidGenderEx;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Patient {
+public class Patient extends Entity {
 
     public enum Gender {
         Male,
         Female,
     }
 
-    private String name;
-    private int id;
     private String diagnose;
     private String species;
     private String breed;
@@ -23,8 +21,9 @@ public class Patient {
 
     private List<String> medications = new ArrayList<>();
 
-    public Patient(int id, String name, String species, String breed, int age, String gender, Owner o) throws InvalidGenderEx
-    {
+    public Patient(int id, String name, String species, String breed, int age, String gender, Owner o) throws InvalidGenderEx {
+        super(id, name);
+
         for (Gender gen : Gender.values()) {
             if (gen.name().equals(gender)) {
                 this.gender = gen;
@@ -35,8 +34,6 @@ public class Patient {
             throw new InvalidGenderEx("Gender " + gender + " is not valid!");
         }
 
-        this.name = name;
-        this.id = id;
         this.species = species;
         this.breed = breed;
         this.age = age;
@@ -59,26 +56,6 @@ public class Patient {
         return medications;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setSpecies(String species) {
-        this.species = species;
-    }
-
-    public void setBreed(String breed) {
-        this.breed = breed;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public void setGender(Gender g) {
-        this.gender = g;
-    }
-
     public String getDiagnosis() {
         return diagnose;
     }
@@ -87,10 +64,12 @@ public class Patient {
         return o;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public int getId() {
         return id;
     }

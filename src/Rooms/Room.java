@@ -1,35 +1,17 @@
 package Rooms;
 
-import Entities.Doctor;
-import Entities.Patient;
+public abstract class Room {
 
-public class Room {
-
-    public enum Type {
-        Diagnose,
-        Treatment
-    }
-
-    private int RoomID;
+    private final int RoomID;
     private String roomNumber;
-    private Doctor assignedDoctor;
-    private Patient currentPatient;
+    private final int maxEntities;
     private boolean isOccupied;
 
-    public Room(int id, String number) {
+    public Room(int id, String number, int maxEntities) {
         this.RoomID = id;
         this.roomNumber = number;
+        this.maxEntities = maxEntities;
     }
-
-    public void setAssignedDoctor(Doctor doctor) {
-        assignedDoctor = doctor;
-    }
-
-    public Doctor getAssignedDoctor() {
-        return assignedDoctor;
-    }
-
-    public void setRoomNumber(String number) { roomNumber = number; }
 
     public String getRoomNumber() { return roomNumber; }
 
@@ -37,20 +19,16 @@ public class Room {
         return RoomID;
     }
 
-    public void setCurrentPatient(Patient currentPatient) {
-        this.currentPatient = currentPatient;
-    }
-
-    public Patient getCurrentPatient() {
-        return currentPatient;
-    }
-
     public void setOccupied(boolean occupied) {
         isOccupied = occupied;
     }
 
+    public void setRoomNumber(String number) { roomNumber = number; }
+
     public boolean isOccupied() {
         return isOccupied;
     }
+
+    public int getMaxEntities() {return maxEntities; }
 
 }

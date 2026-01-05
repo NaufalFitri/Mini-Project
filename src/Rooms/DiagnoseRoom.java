@@ -2,19 +2,18 @@ package Rooms;
 
 import Entities.Doctor;
 import Entities.Patient;
-
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class DiagnoseRoom extends Room implements MedicalRoom {
 
     private LocalDateTime diagnosisStart;
     private LocalDateTime diagnosisEnd;
+    private List<Doctor> assignedDoctor;
+    private List<Patient> currentPatient;
 
-    public DiagnoseRoom(int id, String roomNumber) {
-        super(id, roomNumber);
+    public DiagnoseRoom(int id, String roomNumber, int maxPatients) {
+        super(id, roomNumber, maxPatients);
     }
 
     @Override
@@ -22,21 +21,26 @@ public class DiagnoseRoom extends Room implements MedicalRoom {
         if (!super.isOccupied()) {
             diagnosisStart = LocalDateTime.now();
 
-            super.setCurrentPatient(p);
-            super.setAssignedDoctor(d);
+            assignedDoctor.add(d);
             super.setOccupied(true);
         }
     }
 
-    public void finishDiagnosis() {
+    @Override
+    public void exitRoom() {
         diagnosisEnd = LocalDateTime.now();
-        super.setCurrentPatient(null);
-        super.setAssignedDoctor(null);
+        currentPatient = null;
+        assignedDoctor = null;
         super.setOccupied(false);
     }
 
     @Override
-    public void exitRoom() {
+    public Patient getCurrentPatient() {
+        return currentPatient;
+    }
 
+    @Override
+    public Doctor getAssignedDoctor() {
+        return assignedDoctor;
     }
 }

@@ -8,6 +8,7 @@ import Exceptions.InvalidSpecializationEx;
 import Rooms.DiagnoseRoom;
 import Rooms.Room;
 import Rooms.TreatmentRoom;
+import Rooms.WardRoom;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
@@ -27,22 +28,25 @@ public class Database {
     private final List<Patient> patientList = new ArrayList<>();
     private final List<DiagnoseRoom> diagnoseRooms = new ArrayList<>();
     private final List<TreatmentRoom> treatmentRooms = new ArrayList<>();
-    private final List<Owner> ownersList = new ArrayList<>();
+    private final List<WardRoom> wardRooms = new ArrayList<>();
+    private final List<Owner> ownerList = new ArrayList<>();
 
     private void loadAllEntities(Statement stmt) throws SQLException {
         ResultSet res;
 
         List<String> statements = new ArrayList<>(4);
         String statementOwners = "SELECT * FROM owners";
-        String statementDRoom = "SELECT * FROM rooms r JOIN room_types rt ON rt.type = 'Diagnose'";
-        String statementTRoom = "SELECT * FROM rooms r JOIN room_types rt ON rt.type = 'Treatment'";
+        String statementDRoom = "SELECT * FROM rooms r JOIN room_types rt ON r.roomType_id = rt.roomType_id WHERE rt.type = 'Diagnose'";
+        String statementTRoom = "SELECT * FROM rooms r JOIN room_types rt ON r.roomType_id = rt.roomType_id WHERE rt.type = 'Treatment'";
         String statementDoctor = "SELECT * FROM veterinarians";
         String statementPatient = "SELECT * FROM animals";
+        String statementWRoom = "SELECT * FROM rooms r JOIN room_types rt ON r.roomType_id = rt.roomType_id WHERE rt.type = 'Ward'";
         statements.add(statementOwners);
         statements.add(statementDRoom);
         statements.add(statementTRoom);
         statements.add(statementDoctor);
         statements.add(statementPatient);
+        statements.add(statementWRoom);
 
         int i = 1;
         for (String statement : statements){
@@ -53,7 +57,7 @@ public class Database {
 
                         try {
                             Owner o = new Owner(res.getInt(1), res.getString(2), res.getString(3), res.getString(4));
-                            ownersList.add(o);
+                            ownerList.add(o);
                         
                         } catch (InvalidPhoneEx e) {
                             e.printStackTrace();
@@ -61,10 +65,12 @@ public class Database {
 
                         break;
                     case 2:
-                        diagnoseRooms.add(new DiagnoseRoom(res.getInt(1), res.getString(2)));
+                        diagnoseRooms.add(new DiagnoseRoom(res.getInt(1), res.getString(2), res.getInt(3)));
+                        System.out.println(res.getString(2));
                         break;
                     case 3:
-                        treatmentRooms.add(new TreatmentRoom(res.getInt(1), res.getString(2)));
+                        treatmentRooms.add(new TreatmentRoom(res.getInt(1), res.getString(2), res.getInt(3)));
+                        System.out.println(res.getString(2));
                         break;
                     case 4:
 
@@ -80,7 +86,7 @@ public class Database {
 
                         try {
                             Owner o = null;
-                            for (Owner t : ownersList) {
+                            for (Owner t : ownerList) {
                                 if (t.getId() == res.getInt(9)) {
                                     o = t;
                                 }
@@ -104,6 +110,9 @@ public class Database {
                             e.printStackTrace();
                         }
 
+                        break;
+                    case 6:
+                        wardRooms.add(new WardRoom(res.getInt(1), res.getString(2), res.getInt(3)));
                         break;
                 }
             }
@@ -148,8 +157,12 @@ public class Database {
         return treatmentRooms;
     }
 
+    public List<WardRoom> getWardRooms() {
+        return wardRooms;
+    }
+
     public List<Owner> getOwnersList() {
-        return ownersList;
+        return ownerList;
     }
 
     public String insertDoctor(Statement stmt, String name, Doctor.field field, String phone) throws SQLException {
@@ -216,7 +229,7 @@ public class Database {
             if (res.next()) {
                 try {
                     Owner o = new Owner(res.getInt(1), name, phone, address);
-                    ownersList.add(o);
+                    ownerList.add(o);
                 } catch (InvalidPhoneEx e) {
                     e.printStackTrace();
                 }
@@ -229,11 +242,11 @@ public class Database {
 
     }
 
-    public String insertRoom(Statement stmt, String number, int id) throws SQLException {
+    public String insertRoom(Statement stmt, String number, int maxPatients, int id) throws SQLException {
 
         ResultSet res;
 
-        String statement = "INSERT INTO `rooms` (`room_id`, `room_number`, `roomType_id`) VALUES (NULL, '" + number + "'," + id + ")";
+        String statement = "INSERT INTO `rooms` (`room_id`, `room_number`, `roomType_id`, `maxcapacity`) VALUES (NULL, '" + number + "'," + id + "," + maxPatients + ")";
         String getID = "SELECT o.room_id, rt.type  FROM `owners` o JOIN room_types rt ON rt.roomType_id = o.roomType_id WHERE o.`room_number` = '" + number;
 
         int rows = stmt.executeUpdate(statement);
@@ -242,12 +255,16 @@ public class Database {
             if (res.next()) {
                 switch (res.getString(2)) {
                     case "Diagnose":
-                        DiagnoseRoom DRoom = new DiagnoseRoom(res.getInt(1), number);
+                        DiagnoseRoom DRoom = new DiagnoseRoom(res.getInt(1), number, maxPatients);
                         diagnoseRooms.add(DRoom);
                         break;
                     case "Treatment":
-                        TreatmentRoom TRoom = new TreatmentRoom(res.getInt(1), number);
+                        TreatmentRoom TRoom = new TreatmentRoom(res.getInt(1), number, maxPatients);
                         treatmentRooms.add(TRoom);
+                        break;
+                    case "Ward":
+                        WardRoom WRoom = new WardRoom(res.getInt(1), number, maxPatients);
+                        wardRooms.add(WRoom);
                         break;
                 }
             }
@@ -292,9 +309,9 @@ public class Database {
 
     public String updateOwner(Statement stmt, Owner uo) throws SQLException {
         int i = 0;
-        for (Owner o : ownersList) {
+        for (Owner o : ownerList) {
             if (o.getId() == uo.getId()) {
-                ownersList.set(i, uo);
+                ownerList.set(i, uo);
                 break;
             }
             i++;
@@ -306,10 +323,10 @@ public class Database {
         return rows + " row(s) updated.";
     }
 
-    public String updateRoom(Statement stmt, Room r) throws SQLException {
+    public String updateRoom(Statement stmt, Room ur) throws SQLException {
         String roomtype = "";
 
-        if (r instanceof DiagnoseRoom udr) {
+        if (ur instanceof DiagnoseRoom udr) {
             int i = 0;
             for (DiagnoseRoom dr : diagnoseRooms) {
                 if (dr.getRoomID() == udr.getRoomID()) {
@@ -321,7 +338,7 @@ public class Database {
 
             roomtype = "Diagnose";
 
-        } else if (r instanceof TreatmentRoom utr) {
+        } else if (ur instanceof TreatmentRoom utr) {
             int i = 0;
             for (TreatmentRoom tr : treatmentRooms) {
                 if (tr.getRoomID() == utr.getRoomID()) {
@@ -334,7 +351,7 @@ public class Database {
             roomtype = "Treatment";
         }
 
-        String statement = "UPDATE `rooms` r INNER JOIN room_types rt ON rt.type_name = '" + roomtype + "' SET r.`room_number` = '" + r.getRoomNumber() + "', r.`roomType_id` = rt.`roomType_id` WHERE `rooms`.`room_id` = " + r.getRoomID();
+        String statement = "UPDATE `rooms` r INNER JOIN room_types rt ON rt.type_name = '" + roomtype + "' SET r.`room_number` = '" + ur.getRoomNumber() + "', r.`roomType_id` = rt.`roomType_id` WHERE `rooms`.`room_id` = " + ur.getRoomID();
         int rows = stmt.executeUpdate(statement);
 
         return rows + " row(s) updated.";
@@ -360,7 +377,7 @@ public class Database {
 
     public String deleteOwner(Statement stmt, Owner o) throws SQLException {
 
-        ownersList.remove(o);
+        ownerList.remove(o);
         String sqlStatement = "DELETE FROM owners WHERE `owners`.`owner_id` = " + o.getId();
         int rows = stmt.executeUpdate(sqlStatement);
 
@@ -383,12 +400,10 @@ public class Database {
 
     }
 
-    public String addTreatment(Statement stmt, TreatmentRoom tr) throws SQLException {
+    public void addTreatment(Statement stmt, TreatmentRoom tr) throws SQLException {
 
         String statement = "INSERT INTO `treatments` (`treatment_id`, `vet_id`, `animal_id`, `room_id`, `date`, `diagnosis`, `notes`) VALUES (NULL, '" + tr.getAssignedDoctor().getId() + "', '" + tr.getCurrentPatient().getId() + "', '" + tr.getRoomID() + "', '" + tr.getTreatmentStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "', '" + tr.getCurrentPatient().getDiagnosis() + "', '" + String.join("\n", tr.generateReports()) + "')";
         int rows = stmt.executeUpdate(statement);
-
-        return rows + " row(s) updated.";
 
     }
 

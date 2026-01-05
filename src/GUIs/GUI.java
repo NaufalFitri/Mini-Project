@@ -6,6 +6,7 @@ import Entities.Owner;
 import Entities.Patient;
 import Rooms.DiagnoseRoom;
 import Rooms.TreatmentRoom;
+import Rooms.WardRoom;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -758,7 +759,7 @@ public class GUI extends JFrame {
                     JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                room.finishDiagnosis();
+                room.exitRoom();
                 updateDiagnoseRoomTable(model);
                 JOptionPane.showMessageDialog(this, "Diagnosis finished successfully!");
             }
@@ -1398,6 +1399,13 @@ private JPanel createRoomsPanel() {
 // 2. Add this method to update the room table
 private void updateRoomTable(DefaultTableModel model) {
     model.setRowCount(0);
+    database.getDiagnoseRooms().forEach(e -> {
+        System.out.println(e.getRoomNumber());
+    });
+
+    database.getTreatmentRooms().forEach(e -> {
+        System.out.println(e.getRoomNumber());
+    });
     
     // Add diagnose rooms
     for (DiagnoseRoom room : database.getDiagnoseRooms()) {
@@ -1422,21 +1430,25 @@ private void updateRoomTable(DefaultTableModel model) {
             room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-"
         });
     }
+
 }
 
 // 3. Add this method to add a new room
 private void addRoom(DefaultTableModel model) {
     JTextField roomIdField = new JTextField();
     JTextField roomNumberField = new JTextField();
-    JComboBox<String> roomTypeCombo = new JComboBox<>(new String[]{"Diagnose", "Treatment"});
+    JTextField roomCapacityField = new JTextField();
+    JComboBox<String> roomTypeCombo = new JComboBox<>(new String[]{"Diagnose", "Treatment", "Ward"});
 
-    JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+    JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
     panel.add(new JLabel("Room ID (optional - auto if empty):"));
     panel.add(roomIdField);
     panel.add(new JLabel("Room Number:"));
     panel.add(roomNumberField);
     panel.add(new JLabel("Room Type:"));
     panel.add(roomTypeCombo);
+    panel.add(new JLabel("Room capacity:"));
+    panel.add(roomCapacityField);
 
     int result = JOptionPane.showConfirmDialog(this, panel,
             "Add New Room", JOptionPane.OK_CANCEL_OPTION);
@@ -1446,6 +1458,12 @@ private void addRoom(DefaultTableModel model) {
             String roomIdStr = roomIdField.getText().trim();
             String roomNumber = roomNumberField.getText().trim();
             String roomType = (String) roomTypeCombo.getSelectedItem();
+            int roomCapacity = 0;
+            try {
+                roomCapacity = Integer.parseInt(roomCapacityField.getText().trim());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Invalid Max Capacity!");
+            }
 
             if (roomNumber.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Room number cannot be empty!");
@@ -1476,8 +1494,8 @@ private void addRoom(DefaultTableModel model) {
             if (roomIdStr.isEmpty()) {
                 // Auto-generate ID
                 insertQuery = String.format(
-                    "INSERT INTO `rooms` (`room_number`, `roomType_id`) VALUES ('%s', %d)",
-                    roomNumber, roomTypeId
+                    "INSERT INTO `rooms` (`room_number`, `roomType_id`, `maxcapacity`) VALUES ('%s', %d, '%d')",
+                    roomNumber, roomTypeId, roomCapacity
                 );
             } else {
                 // Use specified ID
@@ -1499,8 +1517,8 @@ private void addRoom(DefaultTableModel model) {
                 }
                 
                 insertQuery = String.format(
-                    "INSERT INTO `rooms` (`room_id`, `room_number`, `roomType_id`) VALUES (%d, '%s', %d)",
-                    roomId, roomNumber, roomTypeId
+                    "INSERT INTO `rooms` (`room_id`, `room_number`, `roomType_id`, `maxcapacity`) VALUES (%d, '%s', %d, %d)",
+                    roomId, roomNumber, roomTypeId, roomCapacity
                 );
             }
             
@@ -1518,10 +1536,10 @@ private void addRoom(DefaultTableModel model) {
                 
                 // Create the appropriate room object and add to the list
                 if (roomType.equals("Diagnose")) {
-                    DiagnoseRoom newRoom = new DiagnoseRoom(newRoomId, roomNumber);
+                    DiagnoseRoom newRoom = new DiagnoseRoom(newRoomId, roomNumber, roomCapacity);
                     database.getDiagnoseRooms().add(newRoom);
                 } else {
-                    TreatmentRoom newRoom = new TreatmentRoom(newRoomId, roomNumber);
+                    TreatmentRoom newRoom = new TreatmentRoom(newRoomId, roomNumber, roomCapacity);
                     database.getTreatmentRooms().add(newRoom);
                 }
             }
