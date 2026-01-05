@@ -87,6 +87,7 @@ public class GUI extends JFrame {
         mainPanel.add(createPatientsPanel(), "patients");
         mainPanel.add(createDoctorsPanel(), "doctors");
         mainPanel.add(createOwnersPanel(), "owners");
+        mainPanel.add(createRoomsPanel(), "rooms");
 
         container.add(mainPanel, BorderLayout.CENTER);
         add(container);
@@ -187,6 +188,7 @@ public class GUI extends JFrame {
         addMenuButton(sidebar, "Patients", "patients");
         addMenuButton(sidebar, "Doctors", "doctors");
         addMenuButton(sidebar, "Owners", "owners");
+        addMenuButton(sidebar, "Room Management", "rooms");
 
         sidebar.add(Box.createVerticalGlue());
 
@@ -1336,4 +1338,394 @@ public class GUI extends JFrame {
             }
         }
     }
+// ============================================================================
+// ADD THESE METHODS TO YOUR EXISTING GUI CLASS (DO NOT MODIFY OTHER PARTS)
+// ============================================================================
+
+// 1. Add this method to create the rooms management panel
+private JPanel createRoomsPanel() {
+    JPanel panel = new JPanel(new BorderLayout(20, 20));
+    panel.setBackground(BACKGROUND_COLOR);
+    panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+    JLabel header = new JLabel("Room Management");
+    header.setFont(new Font("Arial", Font.BOLD, 28));
+    panel.add(header, BorderLayout.NORTH);
+
+    // Combined table for both room types
+    String[] columns = {"Room ID", "Room Number", "Room Type", "Status", "Patient", "Doctor"};
+    DefaultTableModel roomModel = new DefaultTableModel(columns, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+
+    JTable table = new JTable(roomModel);
+    table.setRowHeight(35);
+    table.setFont(new Font("Arial", Font.PLAIN, 14));
+    table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+    table.getTableHeader().setBackground(PRIMARY_COLOR);
+    table.getTableHeader().setForeground(Color.BLACK);
+
+    updateRoomTable(roomModel);
+
+    JScrollPane scrollPane = new JScrollPane(table);
+    panel.add(scrollPane, BorderLayout.CENTER);
+
+    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    buttonPanel.setBackground(BACKGROUND_COLOR);
+
+    JButton addBtn = createStyledButton("Add Room", SUCCESS_COLOR);
+    JButton editBtn = createStyledButton("Edit Room", PRIMARY_COLOR);
+    JButton deleteBtn = createStyledButton("Delete Room", DANGER_COLOR);
+    JButton refreshBtn = createStyledButton("Refresh", SECONDARY_COLOR);
+
+    addBtn.addActionListener(e -> addRoom(roomModel));
+    editBtn.addActionListener(e -> editRoom(table, roomModel));
+    deleteBtn.addActionListener(e -> deleteRoom(table, roomModel));
+    refreshBtn.addActionListener(e -> updateRoomTable(roomModel));
+
+    buttonPanel.add(addBtn);
+    buttonPanel.add(editBtn);
+    buttonPanel.add(deleteBtn);
+    buttonPanel.add(refreshBtn);
+
+    panel.add(buttonPanel, BorderLayout.SOUTH);
+    return panel;
 }
+
+// 2. Add this method to update the room table
+private void updateRoomTable(DefaultTableModel model) {
+    model.setRowCount(0);
+    
+    // Add diagnose rooms
+    for (DiagnoseRoom room : database.getDiagnoseRooms()) {
+        model.addRow(new Object[]{
+            room.getRoomID(),
+            room.getRoomNumber(),
+            "Diagnose",
+            room.isOccupied() ? "Occupied" : "Available",
+            room.getCurrentPatient() != null ? room.getCurrentPatient().getName() : "-",
+            room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-"
+        });
+    }
+    
+    // Add treatment rooms
+    for (TreatmentRoom room : database.getTreatmentRooms()) {
+        model.addRow(new Object[]{
+            room.getRoomID(),
+            room.getRoomNumber(),
+            "Treatment",
+            room.isOccupied() ? "Occupied" : "Available",
+            room.getCurrentPatient() != null ? room.getCurrentPatient().getName() : "-",
+            room.getAssignedDoctor() != null ? room.getAssignedDoctor().getName() : "-"
+        });
+    }
+}
+
+// 3. Add this method to add a new room
+private void addRoom(DefaultTableModel model) {
+    JTextField roomIdField = new JTextField();
+    JTextField roomNumberField = new JTextField();
+    JComboBox<String> roomTypeCombo = new JComboBox<>(new String[]{"Diagnose", "Treatment"});
+
+    JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+    panel.add(new JLabel("Room ID (optional - auto if empty):"));
+    panel.add(roomIdField);
+    panel.add(new JLabel("Room Number:"));
+    panel.add(roomNumberField);
+    panel.add(new JLabel("Room Type:"));
+    panel.add(roomTypeCombo);
+
+    int result = JOptionPane.showConfirmDialog(this, panel,
+            "Add New Room", JOptionPane.OK_CANCEL_OPTION);
+
+    if (result == JOptionPane.OK_OPTION) {
+        try {
+            String roomIdStr = roomIdField.getText().trim();
+            String roomNumber = roomNumberField.getText().trim();
+            String roomType = (String) roomTypeCombo.getSelectedItem();
+
+            if (roomNumber.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Room number cannot be empty!");
+                return;
+            }
+
+            // Check for duplicate room numbers
+            boolean isDuplicate = database.getDiagnoseRooms().stream()
+                    .anyMatch(r -> r.getRoomNumber().equals(roomNumber))
+                    || database.getTreatmentRooms().stream()
+                    .anyMatch(r -> r.getRoomNumber().equals(roomNumber));
+
+            if (isDuplicate) {
+                JOptionPane.showMessageDialog(this, 
+                    "Room number already exists!", 
+                    "Duplicate Error", 
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Get the room type ID from database (1 for Diagnose, 2 for Treatment)
+            int roomTypeId = roomType.equals("Diagnose") ? 1 : 2;
+
+            java.sql.Statement stmt = database.getConnection().createStatement();
+            
+            // Insert the room into database with or without specified ID
+            String insertQuery;
+            if (roomIdStr.isEmpty()) {
+                // Auto-generate ID
+                insertQuery = String.format(
+                    "INSERT INTO `rooms` (`room_number`, `roomType_id`) VALUES ('%s', %d)",
+                    roomNumber, roomTypeId
+                );
+            } else {
+                // Use specified ID
+                int roomId = Integer.parseInt(roomIdStr);
+                
+                // Check if room ID already exists
+                String checkIdQuery = String.format(
+                    "SELECT COUNT(*) FROM `rooms` WHERE `room_id` = %d",
+                    roomId
+                );
+                java.sql.ResultSet checkRs = stmt.executeQuery(checkIdQuery);
+                checkRs.next();
+                if (checkRs.getInt(1) > 0) {
+                    JOptionPane.showMessageDialog(this,
+                        "Room ID already exists!",
+                        "Duplicate Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                insertQuery = String.format(
+                    "INSERT INTO `rooms` (`room_id`, `room_number`, `roomType_id`) VALUES (%d, '%s', %d)",
+                    roomId, roomNumber, roomTypeId
+                );
+            }
+            
+            stmt.executeUpdate(insertQuery);
+            
+            // Get the ID of the newly inserted room
+            String selectQuery = String.format(
+                "SELECT r.room_id FROM `rooms` r WHERE r.`room_number` = '%s'",
+                roomNumber
+            );
+            java.sql.ResultSet rs = stmt.executeQuery(selectQuery);
+            
+            if (rs.next()) {
+                int newRoomId = rs.getInt(1);
+                
+                // Create the appropriate room object and add to the list
+                if (roomType.equals("Diagnose")) {
+                    DiagnoseRoom newRoom = new DiagnoseRoom(newRoomId, roomNumber);
+                    database.getDiagnoseRooms().add(newRoom);
+                } else {
+                    TreatmentRoom newRoom = new TreatmentRoom(newRoomId, roomNumber);
+                    database.getTreatmentRooms().add(newRoom);
+                }
+            }
+            
+            updateRoomTable(model);
+            if (diagnoseRoomModel != null) {
+                updateDiagnoseRoomTable(diagnoseRoomModel);
+            }
+            if (treatmentRoomModel != null) {
+                updateTreatmentRoomTable(treatmentRoomModel);
+            }
+            
+            JOptionPane.showMessageDialog(this, "Room added successfully!");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid Room ID! Please enter a valid number.",
+                    "Input Error",
+                    JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error adding room: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+}
+
+// 4. Add this method to edit an existing room
+private void editRoom(JTable table, DefaultTableModel model) {
+    int selectedRow = table.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a room first!");
+        return;
+    }
+
+    int roomId = (int) table.getValueAt(selectedRow, 0);
+    String currentRoomNumber = (String) table.getValueAt(selectedRow, 1);
+    String currentRoomType = (String) table.getValueAt(selectedRow, 2);
+    String status = (String) table.getValueAt(selectedRow, 3);
+
+    // Check if room is occupied
+    if (status.equals("Occupied")) {
+        JOptionPane.showMessageDialog(this,
+                "Cannot edit an occupied room!\nPlease finish the current diagnosis/treatment first.",
+                "Room Occupied",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    JTextField roomNumberField = new JTextField(currentRoomNumber);
+    JLabel typeLabel = new JLabel(currentRoomType);
+    typeLabel.setFont(new Font("Arial", Font.BOLD, 14));
+
+    JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
+    panel.add(new JLabel("Room Number:"));
+    panel.add(roomNumberField);
+    panel.add(new JLabel("Room Type (cannot change):"));
+    panel.add(typeLabel);
+
+    int result = JOptionPane.showConfirmDialog(this, panel,
+            "Edit Room", JOptionPane.OK_CANCEL_OPTION);
+
+    if (result == JOptionPane.OK_OPTION) {
+        try {
+            String newRoomNumber = roomNumberField.getText().trim();
+
+            if (newRoomNumber.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Room number cannot be empty!");
+                return;
+            }
+
+            // Check for duplicate room numbers (excluding current room)
+            boolean isDuplicate = database.getDiagnoseRooms().stream()
+                    .anyMatch(r -> r.getRoomNumber().equals(newRoomNumber) && r.getRoomID() != roomId)
+                    || database.getTreatmentRooms().stream()
+                    .anyMatch(r -> r.getRoomNumber().equals(newRoomNumber) && r.getRoomID() != roomId);
+
+            if (isDuplicate) {
+                JOptionPane.showMessageDialog(this,
+                        "Room number already exists!",
+                        "Duplicate Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Find the room object and update it
+            Rooms.Room roomObj = null;
+            if (currentRoomType.equals("Diagnose")) {
+                roomObj = database.getDiagnoseRooms().stream()
+                        .filter(r -> r.getRoomID() == roomId)
+                        .findFirst().orElse(null);
+            } else {
+                roomObj = database.getTreatmentRooms().stream()
+                        .filter(r -> r.getRoomID() == roomId)
+                        .findFirst().orElse(null);
+            }
+
+            if (roomObj != null) {
+                // Update in database
+                java.sql.Statement stmt = database.getConnection().createStatement();
+                String updateQuery = String.format(
+                    "UPDATE `rooms` SET `room_number` = '%s' WHERE `room_id` = %d",
+                    newRoomNumber, roomId
+                );
+                stmt.executeUpdate(updateQuery);
+                
+                // Update the room object
+                roomObj.setRoomNumber(newRoomNumber);
+                
+                updateRoomTable(model);
+                if (diagnoseRoomModel != null) {
+                    updateDiagnoseRoomTable(diagnoseRoomModel);
+                }
+                if (treatmentRoomModel != null) {
+                    updateTreatmentRoomTable(treatmentRoomModel);
+                }
+                
+                JOptionPane.showMessageDialog(this, "Room updated successfully!");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error editing room: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+}
+
+// 5. Add this method to delete a room
+private void deleteRoom(JTable table, DefaultTableModel model) {
+    int selectedRow = table.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a room first!");
+        return;
+    }
+
+    int roomId = (int) table.getValueAt(selectedRow, 0);
+    String roomNumber = (String) table.getValueAt(selectedRow, 1);
+    String roomType = (String) table.getValueAt(selectedRow, 2);
+    String status = (String) table.getValueAt(selectedRow, 3);
+
+    // Check if room is occupied
+    if (status.equals("Occupied")) {
+        JOptionPane.showMessageDialog(this,
+                "Cannot delete an occupied room!\nPlease finish the current diagnosis/treatment first.",
+                "Room Occupied",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete room: " + roomNumber + " (" + roomType + ")?\n" +
+                    "This action cannot be undone!",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            // Delete from database first
+            java.sql.Statement stmt = database.getConnection().createStatement();
+            String deleteQuery = String.format(
+                "DELETE FROM `rooms` WHERE `room_id` = %d",
+                roomId
+            );
+            stmt.executeUpdate(deleteQuery);
+            
+            // Remove from the appropriate list
+            if (roomType.equals("Diagnose")) {
+                database.getDiagnoseRooms().removeIf(r -> r.getRoomID() == roomId);
+            } else {
+                database.getTreatmentRooms().removeIf(r -> r.getRoomID() == roomId);
+            }
+            
+            updateRoomTable(model);
+            if (diagnoseRoomModel != null) {
+                updateDiagnoseRoomTable(diagnoseRoomModel);
+            }
+            if (treatmentRoomModel != null) {
+                updateTreatmentRoomTable(treatmentRoomModel);
+            }
+            
+            JOptionPane.showMessageDialog(this, "Room deleted successfully!");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error deleting room: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+}}
+
+// ============================================================================
+// MANUAL INTEGRATION STEPS:
+// ============================================================================
+// 
+// 1. In initializeUI() method, add this line after adding owners panel:
+//    mainPanel.add(createRoomsPanel(), "rooms");
+//
+// 2. In createSidebar() method, add this line after the owners button:
+//    addMenuButton(sidebar, "Room Management", "rooms");
+//
+// 3. That's it! The room management feature is now integrated.
+// ============================================================================
